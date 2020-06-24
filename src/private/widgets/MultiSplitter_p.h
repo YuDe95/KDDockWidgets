@@ -64,12 +64,12 @@ class Frame;
  * relative to a single widget.
  */
 class DOCKS_EXPORT_FOR_UNIT_TESTS MultiSplitter
-        : public QWidgetAdapter
+        : public QWidget
         , public Layouting::Widget_qwidget
 {
     Q_OBJECT
 public:
-    explicit MultiSplitter(QWidgetOrQuick *parent = nullptr);
+    explicit MultiSplitter(Widget *parent = nullptr);
     ~MultiSplitter() override;
     bool isInMainWindow() const;
     MainWindowBase* mainWindow() const;
@@ -142,7 +142,7 @@ public:
      * Excludes the Separator thickness, result is actually smaller than what needed. In other words,
      * the result will be exactly the same as the geometry the widget will get.
      */
-    QRect rectForDrop(const QWidgetOrQuick *widget, KDDockWidgets::Location location, const Layouting::Item *relativeTo) const;
+    QRect rectForDrop(const Widget *widget, KDDockWidgets::Location location, const Layouting::Item *relativeTo) const;
 
     bool deserialize(const LayoutSaver::MultiSplitter &);
     LayoutSaver::MultiSplitter serialize() const;
@@ -215,8 +215,8 @@ Q_SIGNALS:
     void visibleWidgetCountChanged(int count);
 
 protected:
-    void onLayoutRequest() override;
-    bool onResize(QSize newSize) override;
+    void onLayoutRequested() override;
+    void onResized(QSize newSize) override;
 private:
     bool m_inResizeEvent = false;
 

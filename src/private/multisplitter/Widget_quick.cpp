@@ -120,9 +120,10 @@ void Widget_quick::hide()
     m_thisWidget->setVisible(false);
 }
 
-void Widget_quick::close()
+bool Widget_quick::close()
 {
     hide();
+    return true;
 }
 
 void Widget_quick::move(int x, int y)
@@ -199,4 +200,20 @@ QQuickItem *Widget_quick::createQQuickItem(const QString &filename, QQuickItem *
 void Widget_quick::onCloseEvent(QCloseEvent *)
 {
     qWarning() << Q_FUNC_INFO << "Implement me!";
+}
+
+void Layouting::Widget_quick::setWindowTitle(const QString &)
+{
+    qWarning() << Q_FUNC_INFO << "Implement me!";
+}
+
+void Widget_quick::setSizePolicy(QSizePolicy)
+{
+    qWarning() << Q_FUNC_INFO << "Implement me!";
+}
+
+QWindow *Layouting::Widget_quick::tlwWindow() const
+{
+    qWarning() << Q_FUNC_INFO << "Implement me!";
+    return nullptr;
 }

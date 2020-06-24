@@ -35,6 +35,7 @@
 #include "Utils_p.h"
 #include "Config.h"
 #include "FrameworkWidgetFactory.h"
+#include "private/widgets/FloatingWindowWidget_p.h"
 
 #ifdef QT_WIDGETS_LIB
 # include <QTabWidget>
@@ -51,7 +52,7 @@ TabBar::TabBar(QWidgetOrQuick *thisWidget, TabWidget *tabWidget)
 {
 }
 
-DockWidgetBase *TabBar::dockWidgetAt(int index) const
+DockWidget *TabBar::dockWidgetAt(int index) const
 {
     if (index < 0 || index >= numDockWidgets())
         return nullptr;
@@ -59,7 +60,7 @@ DockWidgetBase *TabBar::dockWidgetAt(int index) const
     return m_tabWidget->dockwidgetAt(index);
 }
 
-DockWidgetBase *TabBar::dockWidgetAt(QPoint localPos) const
+DockWidget *TabBar::dockWidgetAt(QPoint localPos) const
 {
     return dockWidgetAt(tabAt(localPos));
 }
@@ -100,9 +101,9 @@ std::unique_ptr<WindowBeingDragged> TabBar::makeWindow()
     return std::unique_ptr<WindowBeingDragged>(new WindowBeingDragged(floatingWindow, draggable));
 }
 
-FloatingWindow * TabBar::detachTab(DockWidgetBase *dockWidget)
+FloatingWindow * TabBar::detachTab(DockWidget *dockWidget)
 {
-    QRect r = dockWidget->geometry();
+    QRect r = dockWidget->QWidget::geometry();
     m_tabWidget->removeDockWidget(dockWidget);
 
     auto newFrame = Config::self().frameworkWidgetFactory()->createFrame();
@@ -134,7 +135,7 @@ QWidgetOrQuick *TabBar::asWidget() const
     return m_thisWidget;
 }
 
-DockWidgetBase *TabBar::singleDockWidget() const
+DockWidget *TabBar::singleDockWidget() const
 {
     return m_tabWidget->singleDockWidget();
 }
@@ -155,17 +156,17 @@ TabWidget::TabWidget(QWidgetOrQuick *thisWidget, Frame *frame)
 
 }
 
-void TabWidget::setCurrentDockWidget(DockWidgetBase *dw)
+void TabWidget::setCurrentDockWidget(DockWidget *dw)
 {
     setCurrentDockWidget(indexOfDockWidget(dw));
 }
 
-void TabWidget::addDockWidget(DockWidgetBase *dock)
+void TabWidget::addDockWidget(DockWidget *dock)
 {
     insertDockWidget(dock, numDockWidgets());
 }
 
-void TabWidget::insertDockWidget(DockWidgetBase *dock, int index)
+void TabWidget::insertDockWidget(DockWidget *dock, int index)
 {
     Q_ASSERT(dock);
     qCDebug(addwidget) << Q_FUNC_INFO << dock << "; count before=" << numDockWidgets();
@@ -199,7 +200,7 @@ void TabWidget::insertDockWidget(DockWidgetBase *dock, int index)
     }
 }
 
-bool TabWidget::contains(DockWidgetBase *dw) const
+bool TabWidget::contains(DockWidget *dw) const
 {
     return indexOfDockWidget(dw) != -1;
 }
@@ -218,8 +219,7 @@ std::unique_ptr<WindowBeingDragged> TabWidget::makeWindow()
 {
     // This is called when using Flag_HideTitleBarWhenTabsVisible
     // For detaching individual tabs, TabBar::makeWindow() is called.
-    if (auto floatingWindow = qobject_cast<FloatingWindow*>(asWidget()->window())) {
-
+    if (auto floatingWindow = qobject_cast<FloatingWindowWidget*>(asWidget()->window())) {
         if (floatingWindow->hasSingleFrame()) {
             // We're already in a floating window, and it only has 1 dock widget.
             // So there's no detachment to be made, we just move the window.
@@ -239,10 +239,10 @@ std::unique_ptr<WindowBeingDragged> TabWidget::makeWindow()
     return std::unique_ptr<WindowBeingDragged>(new WindowBeingDragged(floatingWindow, this));
 }
 
-DockWidgetBase *TabWidget::singleDockWidget() const
+DockWidget *TabWidget::singleDockWidget() const
 {
     if (m_frame->hasSingleDockWidget())
-        return m_frame->dockWidgets().first();
+        return static_cast<DockWidget*>(m_frame->dockWidgets().first());
 
     return nullptr;
 }

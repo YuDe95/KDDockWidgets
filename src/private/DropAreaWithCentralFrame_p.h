@@ -23,14 +23,12 @@
 
 #include "DropArea_p.h"
 
-#include "QWidgetAdapter.h"
-
 namespace KDDockWidgets {
 class DOCKS_EXPORT DropAreaWithCentralFrame : public DropArea
 {
     Q_OBJECT
 public:
-    explicit DropAreaWithCentralFrame(QWidgetOrQuick *parent = {}, MainWindowOptions options = MainWindowOption_HasCentralFrame);
+    explicit DropAreaWithCentralFrame(Layouting::Widget *parent = {}, MainWindowOptions options = MainWindowOption_HasCentralFrame);
     ~DropAreaWithCentralFrame();
 
     static Frame* createCentralFrame(MainWindowOptions options);

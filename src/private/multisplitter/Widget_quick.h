@@ -57,7 +57,7 @@ public:
     void setLayoutItem(Item *) override {}
     void show() override;
     void hide() override;
-    void close() override;
+    bool close() override;
     void move(int x, int y) override;
     void setSize(int width, int height) override;
     void setWidth(int width) override;
@@ -68,6 +68,9 @@ public:
     void resize(QSize) override;
 
     void onCloseEvent(QCloseEvent *) override;
+    void setWindowTitle(const QString &) override;
+    void setSizePolicy(QSizePolicy) override;
+    QWindow* tlwWindow() const override;
 
     static QSize widgetMinSize(const QWidget *w);
 

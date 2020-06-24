@@ -22,6 +22,7 @@
 #define KD_UTILS_P_H
 
 #include "Config.h"
+#include "multisplitter/Widget.h"
 
 #include <QApplication>
 #include <QScreen>
@@ -68,10 +69,10 @@ inline bool windowManagerHasTranslucency()
     return true;
 }
 
-inline QSize screenSizeForWidget(const QWidget *w)
+inline QSize screenSizeForWidget(const Layouting::Widget *w)
 {
-    QWidget *topLevel = w->window();
-    if (QWindow *window = topLevel->windowHandle()) {
+    auto topLevel = w->topLevel();
+    if (QWindow *window = topLevel->tlwWindow()) {
         if (QScreen *screen = window->screen()) {
             return screen->size();
         }
@@ -80,10 +81,10 @@ inline QSize screenSizeForWidget(const QWidget *w)
     return {};
 }
 
-inline int screenNumberForWidget(const QWidget *w)
+inline int screenNumberForWidget(const Layouting::Widget *w)
 {
-    QWidget *topLevel = w->window();
-    if (QWindow *window = topLevel->windowHandle()) {
+    auto topLevel = w->topLevel();
+    if (QWindow *window = topLevel->tlwWindow()) {
         if (QScreen *screen = window->screen()) {
             return qApp->screens().indexOf(screen);
         }

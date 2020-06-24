@@ -76,7 +76,9 @@ MyCentralWidget::~MyCentralWidget() {}
 
 MainWindow::MainWindow(const QString &name, MainWindowOptions options,
                        QWidget *parent, Qt::WindowFlags flags)
-    : MainWindowBase(name, options, parent, flags)
+    : QMainWindow(parent, flags)
+    , Layouting::Widget_qwidget(this)
+    , MainWindowBase((Layouting::Widget_qwidget*)(this), name, options)
     , d(new Private(options, this))
 {
     auto centralWidget = new MyCentralWidget(this);

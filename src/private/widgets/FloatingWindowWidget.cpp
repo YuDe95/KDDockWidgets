@@ -23,6 +23,7 @@
 #include "Utils_p.h"
 #include "DropArea_p.h"
 #include "TitleBar_p.h"
+#include "MainWindowBase.h"
 
 #include <QApplication>
 #include <QPainter>
@@ -31,15 +32,25 @@
 
 using namespace KDDockWidgets;
 
+static QWidget* hackFindParentHarder(Frame *frame, MainWindowBase *candidateParent)
+{
+    MainWindowBase *mw = FloatingWindow::hackFindParentHarder(frame, candidateParent);
+    return mw ? mw->asQWidget() : nullptr;
+}
+
 FloatingWindowWidget::FloatingWindowWidget(MainWindowBase *parent)
-    : FloatingWindow(parent)
+    : QWidget(parent->asQWidget(), KDDockWidgets::usesNativeDraggingAndResizing() ? Qt::Window : Qt::Tool)
+    , Layouting::Widget_qwidget(this)
+    , FloatingWindow((Layouting::Widget_qwidget*)(this))
     , m_vlayout(new QVBoxLayout(this))
 {
     init();
 }
 
 FloatingWindowWidget::FloatingWindowWidget(Frame *frame, MainWindowBase *parent)
-    : FloatingWindow(frame, parent)
+    : QWidget(::hackFindParentHarder(frame, parent), KDDockWidgets::usesNativeDraggingAndResizing() ? Qt::Window : Qt::Tool)
+    , Layouting::Widget_qwidget(this)
+    , FloatingWindow((Layouting::Widget_qwidget*)(this), frame)
     , m_vlayout(new QVBoxLayout(this))
 {
     init();
@@ -49,7 +60,7 @@ void FloatingWindowWidget::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
     p.setPen(0x666666);
-    p.drawRect(rect().adjusted(0, 0, -1, -1));
+    p.drawRect(QWidget::rect().adjusted(0, 0, -1, -1));
 }
 
 bool FloatingWindowWidget::event(QEvent *ev)
@@ -57,7 +68,7 @@ bool FloatingWindowWidget::event(QEvent *ev)
     if (ev->type() == QEvent::WindowStateChange)
         Q_EMIT windowStateChanged(static_cast<QWindowStateChangeEvent*>(ev));
 
-    return FloatingWindow::event(ev);
+    return QWidget::event(ev);
 }
 
 void FloatingWindowWidget::init()

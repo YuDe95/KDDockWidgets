@@ -22,6 +22,9 @@
 #define KD_FLOATING_WINDOWWIDGET_P_H
 
 #include "FloatingWindow_p.h"
+#include "../multisplitter/Widget_qwidget.h"
+
+#include <QWidget>
 
 QT_BEGIN_NAMESPACE
 class QVBoxLayout;
@@ -29,7 +32,10 @@ QT_END_NAMESPACE
 
 namespace KDDockWidgets {
 
-class DOCKS_EXPORT FloatingWindowWidget : public FloatingWindow
+class DOCKS_EXPORT FloatingWindowWidget
+        : public QWidget
+        , public Layouting::Widget_qwidget
+        , public FloatingWindow
 {
     Q_OBJECT
 public:

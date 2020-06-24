@@ -20,7 +20,7 @@
 
 #include "DropArea_p.h"
 #include "Logging_p.h"
-#include "DockWidgetBase.h"
+#include "DockWidget.h" // TODO: DockWidgetBase instead
 #include "Draggable_p.h"
 #include "FloatingWindow_p.h"
 #include "Config.h"
@@ -42,7 +42,7 @@ using namespace KDDockWidgets;
  *
  * @author Sérgio Martins \<sergio.martins@kdab.com\>
  */
-DropArea::DropArea(QWidgetOrQuick *parent)
+DropArea::DropArea(Widget *parent)
     : MultiSplitter(parent)
     , m_dropIndicatorOverlay(Config::self().frameworkWidgetFactory()->createDropIndicatorOverlay(this))
 {
@@ -136,7 +136,7 @@ void DropArea::addDockWidget(DockWidgetBase *dw, Location location, DockWidgetBa
     }
 
     if (option & AddingOption_StartHidden) {
-        addWidget(dw, location, relativeToFrame, DefaultSizeMode::Fair, option);
+        addWidget(dw->asQWidget(), location, relativeToFrame, DefaultSizeMode::Fair, option);
     } else {
         addWidget(frame->asQWidget(), location, relativeToFrame, DefaultSizeMode::Fair, option);
     }
@@ -195,7 +195,7 @@ static bool isOutterLocation(DropIndicatorOverlayInterface::DropLocation locatio
 
 bool DropArea::drop(FloatingWindow *droppedWindow, QPoint globalPos)
 {
-    if (droppedWindow == window()) {
+    if (droppedWindow->asQWidget() == window()) {
         qWarning() << "Refusing to drop onto itself"; // Doesn't happen
         return false;
     }
@@ -249,18 +249,18 @@ bool DropArea::drop(FloatingWindow *droppedWindow, QPoint globalPos)
     return result;
 }
 
-bool DropArea::drop(QWidgetOrQuick *droppedWindow, KDDockWidgets::Location location, Frame *relativeTo)
+bool DropArea::drop(Layouting::Widget *droppedWindow, KDDockWidgets::Location location, Frame *relativeTo)
 {
     qCDebug(docking) << "DropArea::addFrame";
 
-    if (auto dock = qobject_cast<DockWidgetBase *>(droppedWindow)) {
+    if (auto dock = Layouting::widget_cast<DockWidget *>(droppedWindow)) {
         if (!validateAffinity(dock))
             return false;
 
         auto frame = Config::self().frameworkWidgetFactory()->createFrame();
         frame->addWidget(dock);
         addWidget(frame->asQWidget(), location, relativeTo, DefaultSizeMode::FairButFloor);
-    } else if (auto floatingWindow = qobject_cast<FloatingWindow *>(droppedWindow)) {
+    } else if (auto floatingWindow = Layouting::widget_cast<FloatingWindow *>(droppedWindow)) {
         if (!validateAffinity(floatingWindow))
             return false;
 

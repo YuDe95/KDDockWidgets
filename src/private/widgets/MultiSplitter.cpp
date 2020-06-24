@@ -45,8 +45,8 @@
 
 using namespace KDDockWidgets;
 
-MultiSplitter::MultiSplitter(QWidgetOrQuick *parent)
-    : QWidgetAdapter(parent)
+MultiSplitter::MultiSplitter(Layouting::Widget *parent)
+    : QWidget(parent->asQWidget())
     , Layouting::Widget_qwidget(this)
 {
 
@@ -54,7 +54,7 @@ MultiSplitter::MultiSplitter(QWidgetOrQuick *parent)
     setRootItem(new Layouting::ItemContainer(this));
     DockRegistry::self()->registerLayout(this);
 
-    setLayoutSize(parent->QWidget::size());
+    setLayoutSize(parent->size());
 
     qCDebug(multisplittercreation()) << "MultiSplitter";
 
@@ -72,12 +72,12 @@ MultiSplitter::~MultiSplitter()
     DockRegistry::self()->unregisterLayout(this);
 }
 
-void MultiSplitter::onLayoutRequest()
+void MultiSplitter::onLayoutRequested()
 {
     updateSizeConstraints();
 }
 
-bool MultiSplitter::onResize(QSize newSize)
+void MultiSplitter::onResized(QSize newSize)
 {
     qCDebug(sizing) << Q_FUNC_INFO << "; new=" << newSize
                     << "; window=" << window();
@@ -88,8 +88,6 @@ bool MultiSplitter::onResize(QSize newSize)
         // don't resize anything while we're restoring the layout
         setLayoutSize(newSize);
     }
-
-    return false; // So QWidget::resizeEvent is called
 }
 
 bool MultiSplitter::isInMainWindow() const
@@ -99,10 +97,10 @@ bool MultiSplitter::isInMainWindow() const
 
 MainWindowBase *MultiSplitter::mainWindow() const
 {
-    if (auto pw = QWidget::parentWidget()) {
+    if (auto pw = Widget::parentWidget()) {
         // Note that if pw is a FloatingWindow then pw->parentWidget() can be a MainWindow too, as it's parented
         if (pw->objectName() == QLatin1String("MyCentralWidget"))
-            return qobject_cast<MainWindowBase*>(pw->parentWidget());
+            return Layouting::widget_cast<MainWindowBase*>(pw->parentWidget().get());
     }
 
     return nullptr;
@@ -110,7 +108,7 @@ MainWindowBase *MultiSplitter::mainWindow() const
 
 FloatingWindow *MultiSplitter::floatingWindow() const
 {
-    return qobject_cast<FloatingWindow*>(QWidget::parentWidget());
+    return Layouting::widget_cast<FloatingWindow*>(Layouting::Widget::parentWidget().get());
 }
 
 
@@ -123,7 +121,7 @@ bool MultiSplitter::validateInputs(QWidgetOrQuick *widget,
         return false;
     }
 
-    const bool isDockWidget = qobject_cast<DockWidgetBase*>(widget);
+    const bool isDockWidget = dynamic_cast<DockWidgetBase*>(widget);
     const bool isStartHidden = option & AddingOption_StartHidden;
 
     if (!dynamic_cast<Frame*>(widget) && !qobject_cast<MultiSplitter*>(widget) && !isDockWidget) {
@@ -199,7 +197,7 @@ void MultiSplitter::addWidget(QWidgetOrQuick *w, Location location,
 
     Frame::List frames = framesFrom(w);
     unrefOldPlaceholders(frames);
-    auto dw = qobject_cast<DockWidgetBase*>(w);
+    auto dw = dynamic_cast<DockWidgetBase*>(w);
 
     if (frame) {
         newItem = new Layouting::Item(this);
@@ -427,20 +425,20 @@ Layouting::ItemContainer *MultiSplitter::rootItem() const
     return m_rootItem;
 }
 
-QRect MultiSplitter::rectForDrop(const QWidgetOrQuick *widget, Location location,
+QRect MultiSplitter::rectForDrop(const Layouting::Widget *widget, Location location,
                                  const Layouting::Item *relativeTo) const
 {
     Layouting::Item item(nullptr);
 
-    if (auto fw = qobject_cast<const FloatingWindow*>(widget)) {
+    if (auto fw = Layouting::widget_cast<const FloatingWindow*>(widget)) {
         Layouting::ItemContainer *root = fw->dropArea()->rootItem();
         item.setSize(root->size());
         item.setMinSize(root->minSize());
         item.setMaxSizeHint(root->maxSizeHint());
     } else {
         item.setSize(widget->size());
-        item.setMinSize(Layouting::Widget_qwidget::widgetMinSize(widget));
-        item.setMaxSizeHint(Layouting::Widget_qwidget::widgetMaxSize(widget));
+        item.setMinSize(Layouting::Widget_qwidget::widgetMinSize(widget->asQWidget()));
+        item.setMaxSizeHint(Layouting::Widget_qwidget::widgetMaxSize(widget->asQWidget()));
     }
 
     Layouting::ItemContainer *container = relativeTo ? relativeTo->parentContainer()

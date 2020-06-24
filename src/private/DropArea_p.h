@@ -47,13 +47,13 @@ class DOCKS_EXPORT_FOR_UNIT_TESTS DropArea : public MultiSplitter
 {
     Q_OBJECT
 public:
-    explicit DropArea(QWidgetOrQuick *parent);
+    explicit DropArea(Layouting::Widget *parent);
     ~DropArea();
 
     void removeHover();
     void hover(FloatingWindow *floatingWindow, QPoint globalPos);
     bool drop(FloatingWindow *droppedWindow, QPoint globalPos);
-    bool drop(QWidgetOrQuick *droppedwindow, KDDockWidgets::Location location, Frame *relativeTo);
+    bool drop(Widget *droppedwindow, KDDockWidgets::Location location, Frame *relativeTo);
     int numFrames() const;
     Frame::List frames() const;
 

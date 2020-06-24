@@ -44,7 +44,7 @@ TitleBarWidget::TitleBarWidget(Frame *parent)
 }
 
 TitleBarWidget::TitleBarWidget(FloatingWindow *parent)
-    : QWidget(parent)
+    : QWidget(parent->asQWidget())
     , Layouting::Widget_qwidget(this)
     , TitleBar((Layouting::Widget_qwidget*)(this), parent)
     , m_layout(new QHBoxLayout(this))

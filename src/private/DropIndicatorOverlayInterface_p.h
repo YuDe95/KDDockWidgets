@@ -82,7 +82,7 @@ protected:
     virtual void updateVisibility() = 0;
     Frame *m_hoveredFrame = nullptr;
     DropLocation m_currentDropLocation = DropLocation_None;
-    QPointer<const FloatingWindow> m_windowBeingDragged;
+    Layouting::WidgetQPointer<const FloatingWindow> m_windowBeingDragged;
     DropArea *const m_dropArea;
 };
 }

@@ -248,7 +248,7 @@ bool StateDragging::handleMouseMove(QPoint globalPos)
     }
 
     if (!q->m_nonClientDrag)
-        fw->windowHandle()->setPosition(globalPos - q->m_offset);
+        fw->tlwWindow()->setPosition(globalPos - q->m_offset);
 
 
     if (fw->anyNonDockable()) {
@@ -513,7 +513,7 @@ QWidgetOrQuick *DragController::qtTopLevelUnderCursor() const
 
         return qtTopLevelUnderCursor_impl<QWidget*>(globalPos,
                                                     DockRegistry::self()->topLevels(/*excludeFloating=*/true),
-                                                    tlwBeingDragged);
+                                                    tlwBeingDragged->asQWidget());
     }
 #else
     // QtQuick:
@@ -562,7 +562,7 @@ DropArea *DragController::dropAreaUnderCursor() const
         Q_ASSERT(false);
     }
 
-    if (auto dock = qobject_cast<DockWidgetBase *>(topLevel)) {
+    if (auto dock = dynamic_cast<DockWidgetBase *>(topLevel)) {
         FloatingWindow *fw = dock->morphIntoFloatingWindow();
         m_windowBeingDragged->floatingWindow()->raise();
         if (DockRegistry::self()->affinitiesMatch(fw->affinities(), affinities))

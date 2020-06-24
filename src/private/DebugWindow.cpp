@@ -32,6 +32,7 @@
 #include "DropArea_p.h"
 #include "MainWindow.h"
 #include "LayoutSaver.h"
+#include "MainWindow.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -218,7 +219,7 @@ DebugWindow::DebugWindow(QWidget *parent)
         if (mainWindows.isEmpty())
             return;
         auto mainwindow = mainWindows.at(0);
-        auto centralWidget = mainwindow->centralWidget();
+        auto centralWidget = qobject_cast<MainWindow*>(mainwindow->asQObject())->centralWidget();
         centralWidget->setParent(nullptr, Qt::Window);
         if (!centralWidget->isVisible()) {
             centralWidget->show();

@@ -33,6 +33,7 @@
 #include "KDDockWidgets.h"
 #include "QWidgetAdapter.h"
 #include "LayoutSaver_p.h"
+#include "multisplitter/Widget_wrapper.h"
 
 #include <QVector>
 
@@ -52,7 +53,7 @@ class DropAreaWithCentralFrame;
  * Do not use instantiate directly in user code. Use MainWindow instead.
  */
 #ifndef PYTHON_BINDINGS //Pyside bug: https://bugreports.qt.io/projects/PYSIDE/issues/PYSIDE-1327
-class DOCKS_EXPORT MainWindowBase : public QMainWindowOrQuick
+class DOCKS_EXPORT MainWindowBase : public Layouting::Widget_wrapper
 #else
 class DOCKS_EXPORT MainWindowBase : public QMainWindow
 #endif
@@ -60,8 +61,8 @@ class DOCKS_EXPORT MainWindowBase : public QMainWindow
     Q_OBJECT
 public:
     typedef QVector<MainWindowBase*> List;
-    explicit MainWindowBase(const QString &uniqueName, MainWindowOptions options = MainWindowOption_HasCentralFrame,
-                            QWidgetOrQuick *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags());
+    explicit MainWindowBase(Layouting::Widget *thisWidget, const QString &uniqueName,
+                            MainWindowOptions options = MainWindowOption_HasCentralFrame);
 
     ~MainWindowBase() override;
 

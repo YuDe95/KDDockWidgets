@@ -55,9 +55,9 @@ public:
     const MainWindowOptions m_options;
 };
 
-MainWindowBase::MainWindowBase(const QString &uniqueName, KDDockWidgets::MainWindowOptions options,
-                               QWidgetOrQuick *parent, Qt::WindowFlags flags)
-    : QMainWindowOrQuick(parent, flags)
+MainWindowBase::MainWindowBase(Layouting::Widget *thisWidget, const QString &uniqueName,
+                               KDDockWidgets::MainWindowOptions options)
+    : Layouting::Widget_wrapper(thisWidget)
     , d(new Private(options))
 {
     setUniqueName(uniqueName);
@@ -187,7 +187,7 @@ LayoutSaver::MainWindow MainWindowBase::serialize() const
     LayoutSaver::MainWindow m;
 
     m.options = options();
-    m.geometry = window()->geometry(); // window() as the MainWindow can be embedded
+    m.geometry = topLevel()->geometry(); // window() as the MainWindow can be embedded
     m.isVisible = isVisible();
     m.uniqueName = uniqueName();
     m.screenIndex = screenNumberForWidget(this);

@@ -367,7 +367,7 @@ const QVector<FloatingWindow *> DockRegistry::nestedwindows() const
 FloatingWindow *DockRegistry::floatingWindowForHandle(QWindow *windowHandle) const
 {
     for (FloatingWindow *fw : m_nestedWindows) {
-        if (fw->windowHandle() == windowHandle)
+        if (fw->tlwWindow() == windowHandle)
             return fw;
     }
 
@@ -382,13 +382,13 @@ QVector<QWidget *> DockRegistry::topLevels(bool excludeFloatingDocks) const
     if (!excludeFloatingDocks) {
         for (FloatingWindow *fw : m_nestedWindows) {
             if (fw->isVisible())
-                windows << fw;
+                windows << fw->asQWidget();
         }
     }
 
     for (MainWindowBase *m : m_mainWindows) {
         if (m->isVisible())
-            windows << m->topLevelWidget();
+            windows << m->topLevel()->asQWidget();
     }
 
     return windows;
@@ -421,7 +421,7 @@ void DockRegistry::clear(const DockWidgetBase::List &dockWidgets,
 void DockRegistry::ensureAllFloatingWidgetsAreMorphed()
 {
     for (DockWidgetBase *dw : qAsConst(m_dockWidgets)) {
-        if (dw->window() == dw && dw->isVisible())
+        if (dw->isWindow() && dw->isVisible())
             dw->morphIntoFloatingWindow();
     }
 }

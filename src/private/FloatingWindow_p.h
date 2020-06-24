@@ -24,7 +24,7 @@
 #include "docks_export.h"
 #include "Frame_p.h"
 #include "Draggable_p.h"
-#include "QWidgetAdapter.h"
+#include "multisplitter/Widget_wrapper.h"
 #include "LayoutSaver_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -39,13 +39,14 @@ class DropArea;
 class Frame;
 class MultiSplitter;
 
-class DOCKS_EXPORT FloatingWindow : public QWidgetAdapter
-    , public Draggable
+class DOCKS_EXPORT FloatingWindow
+        : public Layouting::Widget_wrapper
+        , public Draggable
 {
     Q_OBJECT
 public:
-    explicit FloatingWindow(MainWindowBase *parent = nullptr);
-    explicit FloatingWindow(Frame *frame, MainWindowBase *parent = nullptr);
+    explicit FloatingWindow(Layouting::Widget *thisWidget);
+    explicit FloatingWindow(Layouting::Widget *thisWidget, Frame *frame);
     ~FloatingWindow() override;
 
     bool deserialize(const LayoutSaver::FloatingWindow &);
@@ -128,6 +129,8 @@ public:
      * Returns global coordinates.
      */
     QRect dragRect() const;
+
+    static MainWindowBase* hackFindParentHarder(Frame *frame, MainWindowBase *candidateParent);
 
 Q_SIGNALS:
     void numFramesChanged();

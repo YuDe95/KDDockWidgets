@@ -22,6 +22,7 @@
 #include "Item_p.h"
 
 #include <QObject>
+#include <QResizeEvent>
 
 using namespace Layouting;
 
@@ -41,6 +42,10 @@ public:
 
     bool eventFilter(QObject *, QEvent *event) override
     {
+        if (event->type() == QEvent::Resize)
+            q->onResized(static_cast<QResizeEvent*>(event)->size());
+        if (event->type() == QEvent::LayoutRequest)
+            q->onLayoutRequested();
         return q->eventFilter(event);
     }
 
@@ -73,6 +78,78 @@ QString Widget::objectName() const
 void Widget::setObjectName(const QString &name)
 {
     m_thisObj->setObjectName(name);
+}
+
+bool Widget::isMaximized() const
+{
+    if (QWindow *window = tlwWindow())
+        return window->windowState() == Qt::WindowMaximized;
+
+    return false;
+}
+
+bool Widget::isMinimized() const
+{
+    if (QWindow *window = tlwWindow())
+        return window->windowState() == Qt::WindowMinimized;
+
+    return false;
+}
+
+void Widget::showMaximized()
+{
+    if (QWindow *w = tlwWindow())
+        w->showMaximized();
+}
+
+void Widget::showNormal()
+{
+    if (QWindow *w = tlwWindow())
+        w->showNormal();
+}
+
+void Widget::raise()
+{
+    if (QWindow *w = tlwWindow())
+        w->raise();
+}
+
+void Widget::requestActivate()
+{
+    if (QWindow *w = tlwWindow())
+        w->requestActivate();
+}
+
+void Widget::setIcon(const QIcon &icon)
+{
+    if (QWindow *w = tlwWindow())
+        w->setIcon(icon);
+}
+
+void Widget::raiseAndActivate()
+{
+    raise();
+    requestActivate();
+}
+
+void Widget::onResized(QSize newSize)
+{
+    Q_UNUSED(newSize);
+}
+
+void Widget::move(QPoint p)
+{
+    move(p.x(), p.y());
+}
+
+void Widget::resize(int width, int height)
+{
+    resize(QSize(width, height));
+}
+
+bool Widget::isWindow() const
+{
+    return m_thisObj == topLevel()->asQObject();
 }
 
 int Widget::width() const

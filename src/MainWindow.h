@@ -29,6 +29,9 @@
 #define KD_MAINWINDOW_H
 
 #include "MainWindowBase.h"
+#include "../multisplitter/Widget_qwidget.h"
+
+#include <QMainWindow>
 
 namespace KDDockWidgets {
 
@@ -36,7 +39,10 @@ namespace KDDockWidgets {
  * @brief The QMainwindow sub-class that the application should use to be able
  * to dock KDDockWidget::DockWidget instances.
  */
-class DOCKS_EXPORT MainWindow : public MainWindowBase
+class DOCKS_EXPORT MainWindow
+        : public QMainWindow
+        , public Layouting::Widget_qwidget
+        , public MainWindowBase
 {
     Q_OBJECT
 public:

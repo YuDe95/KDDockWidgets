@@ -24,7 +24,7 @@
 
 using namespace KDDockWidgets;
 
-DropAreaWithCentralFrame::DropAreaWithCentralFrame(QWidgetOrQuick *parent, MainWindowOptions options)
+DropAreaWithCentralFrame::DropAreaWithCentralFrame(Layouting::Widget *parent, MainWindowOptions options)
     : DropArea(parent)
     , m_centralFrame(createCentralFrame(options))
 {

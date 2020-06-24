@@ -82,9 +82,9 @@ public:
 }
 #endif
 
-FloatingWindow::FloatingWindow(MainWindowBase *parent)
-    : QWidgetAdapter(parent, KDDockWidgets::usesNativeDraggingAndResizing() ? Qt::Window : Qt::Tool)
-    , Draggable(this, KDDockWidgets::usesNativeDraggingAndResizing()) // FloatingWindow is only draggable when using a native title bar. Otherwise the KDDockWidgets::TitleBar is the draggable
+FloatingWindow::FloatingWindow(Widget *thisWidget)
+    : Layouting::Widget_wrapper(thisWidget)
+    , Draggable(asWidget(), KDDockWidgets::usesNativeDraggingAndResizing()) // FloatingWindow is only draggable when using a native title bar. Otherwise the KDDockWidgets::TitleBar is the draggable
     , m_dropArea(new DropArea(this))
     , m_titleBar(Config::self().frameworkWidgetFactory()->createTitleBar(this))
 {
@@ -109,49 +109,14 @@ FloatingWindow::FloatingWindow(MainWindowBase *parent)
     maybeCreateResizeHandler();
 
     updateTitleBarVisibility();
-    connect(m_dropArea, &MultiSplitter::visibleWidgetCountChanged, this, &FloatingWindow::onFrameCountChanged);
-    connect(m_dropArea, &MultiSplitter::visibleWidgetCountChanged, this, &FloatingWindow::numFramesChanged);
-    connect(m_dropArea, &MultiSplitter::visibleWidgetCountChanged, this, &FloatingWindow::onVisibleFrameCountChanged);
-    m_layoutDestroyedConnection = connect(m_dropArea, &QObject::destroyed, this, &FloatingWindow::scheduleDeleteLater);
+    QObject::connect(m_dropArea, &MultiSplitter::visibleWidgetCountChanged, asQObject(), [this] (int count) { onFrameCountChanged(count); });
+    QObject::connect(m_dropArea, &MultiSplitter::visibleWidgetCountChanged, this, &FloatingWindow::numFramesChanged);
+    QObject::connect(m_dropArea, &MultiSplitter::visibleWidgetCountChanged, asQObject(), [this] (int count) { onVisibleFrameCountChanged(count); });
+    m_layoutDestroyedConnection = QObject::connect(m_dropArea, &QObject::destroyed, asQObject(), [this] { scheduleDeleteLater(); });
 }
 
-static MainWindowBase* hackFindParentHarder(Frame *frame, MainWindowBase *candidateParent)
-{
-    // TODO: Using a parent helps the floating windows stay in front of the main window always.
-    // We're not receiving the parent via ctor argument as the app can have multiple-main windows,
-    // so use a hack here.
-    // Not quite clear what to do if the app supports multiple main windows though.
-
-    if (candidateParent)
-        return candidateParent;
-
-#ifdef KDDOCKWIDGETS_QTWIDGETS
-    const MainWindowBase::List windows = DockRegistry::self()->mainwindows();
-
-    if (windows.isEmpty())
-        return nullptr;
-
-    if (windows.size() == 1) {
-        return windows.first();
-    } else {
-        const QStringList affinities = frame ? frame->affinities() : QStringList();
-        const MainWindowBase::List mainWindows = DockRegistry::self()->mainWindowsWithAffinity(affinities);
-
-        if (mainWindows.isEmpty()) {
-            qWarning() << Q_FUNC_INFO << "No window with affinity" << affinities << "found";
-            return nullptr;
-        } else {
-            return mainWindows.first();
-        }
-    }
-#else
-    qWarning() << "Implement and abstract me!";
-    return nullptr;
-#endif
-}
-
-FloatingWindow::FloatingWindow(Frame *frame, MainWindowBase *parent)
-    : FloatingWindow(hackFindParentHarder(frame, parent))
+FloatingWindow::FloatingWindow(Widget *thisWidget, Frame *frame)
+    : FloatingWindow(thisWidget)
 {
     m_disableSetVisible = true;
     // Adding a widget will trigger onFrameCountChanged, which triggers a setVisible(true).
@@ -163,7 +128,7 @@ FloatingWindow::FloatingWindow(Frame *frame, MainWindowBase *parent)
 
 FloatingWindow::~FloatingWindow()
 {
-    disconnect(m_layoutDestroyedConnection);
+    QObject::disconnect(m_layoutDestroyedConnection);
     delete m_nchittestFilter;
 
     DockRegistry::self()->unregisterNestedWindow(this);
@@ -186,9 +151,9 @@ bool FloatingWindow::nativeEvent(const QByteArray &eventType, void *message, lon
 void FloatingWindow::maybeCreateResizeHandler()
 {
     if (!KDDockWidgets::usesNativeDraggingAndResizing()) {
-        setFlag(Qt::FramelessWindowHint, true);
+        asQWidget()->setWindowFlag(Qt::FramelessWindowHint, true);
 #ifdef KDDOCKWIDGETS_QTWIDGETS
-        setWidgetResizeHandler(new WidgetResizeHandler(this));
+        setWidgetResizeHandler(new WidgetResizeHandler(asQWidget()));
 #endif
     }
 }
@@ -225,7 +190,7 @@ void FloatingWindow::setSuggestedGeometry(QRect suggestedRect, bool preserveCent
         // single-frame is the most common case, like floating a dock widget, so let's do that first, it's also
         // easy.
         Frame *frame = frames[0];
-        const QSize waste = (minimumSize() - frame->minSize()).expandedTo(QSize(0, 0));
+        const QSize waste = (minSize() - frame->minSize()).expandedTo(QSize(0, 0));
         const QSize size = (frame->maxSizeHint() + waste).boundedTo(suggestedRect.size());
 
         // Resize to new size but preserve center
@@ -242,7 +207,7 @@ void FloatingWindow::scheduleDeleteLater()
 {
     m_beingDeleted = true;
     DockRegistry::self()->unregisterNestedWindow(this);
-    deleteLater();
+    asQObject()->deleteLater();
 }
 
 MultiSplitter *FloatingWindow::multiSplitter() const
@@ -364,7 +329,7 @@ void FloatingWindow::updateTitleAndIcon()
 
     if (KDDockWidgets::usesNativeTitleBar()) {
         setWindowTitle(title);
-        setWindowIcon(icon);
+        setIcon(icon);
     }
 }
 
@@ -410,7 +375,7 @@ LayoutSaver::FloatingWindow FloatingWindow::serialize() const
     fw.screenSize = screenSizeForWidget(this);
     fw.affinities = affinities();
 
-    auto mainWindow = qobject_cast<MainWindowBase*>(parentWidget());
+    auto mainWindow = qobject_cast<MainWindowBase*>(parentWidget()->asQWidget());
     fw.parentIndex = mainWindow ? DockRegistry::self()->mainwindows().indexOf(mainWindow)
                                 : -1;
     return fw;
@@ -429,4 +394,39 @@ QRect FloatingWindow::dragRect() const
     }
 
     return rect;
+}
+
+MainWindowBase* FloatingWindow::hackFindParentHarder(Frame *frame, MainWindowBase *candidateParent)
+{
+    // TODO: Using a parent helps the floating windows stay in front of the main window always.
+    // We're not receiving the parent via ctor argument as the app can have multiple-main windows,
+    // so use a hack here.
+    // Not quite clear what to do if the app supports multiple main windows though.
+
+    if (candidateParent)
+        return candidateParent;
+
+#ifdef KDDOCKWIDGETS_QTWIDGETS
+    const MainWindowBase::List windows = DockRegistry::self()->mainwindows();
+
+    if (windows.isEmpty())
+        return nullptr;
+
+    if (windows.size() == 1) {
+        return windows.first();
+    } else {
+        const QStringList affinities = frame ? frame->affinities() : QStringList();
+        const MainWindowBase::List mainWindows = DockRegistry::self()->mainWindowsWithAffinity(affinities);
+
+        if (mainWindows.isEmpty()) {
+            qWarning() << Q_FUNC_INFO << "No window with affinity" << affinities << "found";
+            return nullptr;
+        } else {
+            return mainWindows.first();
+        }
+    }
+#else
+    qWarning() << "Implement and abstract me!";
+    return nullptr;
+#endif
 }

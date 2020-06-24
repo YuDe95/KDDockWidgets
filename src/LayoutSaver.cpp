@@ -80,7 +80,7 @@ public:
     }
 
     template <typename T>
-    void deserializeWindowGeometry(const T &saved, QWidgetOrQuick *topLevel);
+    void deserializeWindowGeometry(const T &saved, Layouting::Widget *topLevel);
     void deleteEmptyFrames();
     void clearRestoredProperty();
 
@@ -261,7 +261,7 @@ bool LayoutSaver::restoreLayout(const QByteArray &data)
             continue;
 
         if (!(d->m_restoreOptions & RestoreOption_RelativeToMainWindow))
-            d->deserializeWindowGeometry(mw, mainWindow->window()); // window(), as the MainWindow can be embedded
+            d->deserializeWindowGeometry(mw, mainWindow->topLevel().get()); // window(), as the MainWindow can be embedded
 
         if (!mainWindow->deserialize(mw))
             return false;
@@ -320,7 +320,7 @@ DockWidgetBase::List LayoutSaver::restoredDockWidgets() const
     DockWidgetBase::List result;
     result.reserve(allDockWidgets.size());
     for (DockWidgetBase *dw : allDockWidgets) {
-        if (dw->property("kddockwidget_was_restored").toBool())
+        if (dw->asQObject()->property("kddockwidget_was_restored").toBool())
             result.push_back(dw);
     }
 
@@ -331,12 +331,12 @@ void LayoutSaver::Private::clearRestoredProperty()
 {
     const DockWidgetBase::List &allDockWidgets = DockRegistry::self()->dockwidgets();
     for (DockWidgetBase *dw : allDockWidgets) {
-        dw->setProperty("kddockwidget_was_restored", QVariant());
+        dw->asQObject()->setProperty("kddockwidget_was_restored", QVariant());
     }
 }
 
 template <typename T>
-void LayoutSaver::Private::deserializeWindowGeometry(const T &saved, QWidgetOrQuick *topLevel)
+void LayoutSaver::Private::deserializeWindowGeometry(const T &saved, Layouting::Widget *topLevel)
 {
     topLevel->setGeometry(saved.geometry);
     topLevel->setVisible(saved.isVisible);
@@ -861,7 +861,7 @@ LayoutSaver::ScalingInfo::ScalingInfo(const QString &mainWindowId, QRect savedMa
 
     this->mainWindowName = mainWindowId;
     this->savedMainWindowGeometry = savedMainWindowGeo;
-    realMainWindowGeometry = mainWindow->window()->geometry(); // window() as our main window might be embedded
+    realMainWindowGeometry = mainWindow->topLevel()->geometry(); // window() as our main window might be embedded
     widthFactor = double(realMainWindowGeometry.width()) / savedMainWindowGeo.width();
     heightFactor = double(realMainWindowGeometry.height()) / savedMainWindowGeo.height();
 }

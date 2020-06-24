@@ -45,7 +45,7 @@ public:
 
 private:
     Q_DISABLE_COPY(WindowBeingDragged)
-    QPointer<FloatingWindow> m_floatingWindow;
+    Layouting::WidgetQPointer<FloatingWindow> m_floatingWindow;
     QPointer<QWidgetOrQuick> m_draggable;
 };
 }

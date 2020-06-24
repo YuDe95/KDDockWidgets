@@ -34,7 +34,7 @@ static Draggable* bestDraggable(Draggable *draggable)
         if (titleBar->isVisible())
             return draggable;
 
-        auto fw = qobject_cast<FloatingWindow*>(titleBar->topLevel()->asQWidget());
+        auto fw = Layouting::widget_cast<FloatingWindow*>(titleBar->topLevel().get());
         if (!fw) // defensive, doesn't happen
             return draggable;
 
@@ -75,7 +75,7 @@ void WindowBeingDragged::grabMouse(bool grab)
     if (!m_draggable)
         return;
 
-    qCDebug(hovering) << "WindowBeingDragged: grab " << m_floatingWindow << grab << m_draggable;
+    qCDebug(hovering) << "WindowBeingDragged: grab " << m_floatingWindow.data() << grab << m_draggable;
     if (grab)
         DragController::instance()->grabMouseFor(m_draggable);
     else

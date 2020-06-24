@@ -29,7 +29,6 @@
 #define KD_FRAME_P_H
 
 #include "docks_export.h"
-#include "QWidgetAdapter.h"
 #include "LayoutSaver_p.h"
 #include "multisplitter/Widget_wrapper.h"
 #include "multisplitter/Item_p.h"
